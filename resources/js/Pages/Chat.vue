@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router, useForm } from "@inertiajs/vue3";
+import TextInput from '@/Components/TextInput.vue';
 import InputError from "@/Components/InputError.vue";
 import { ref } from "vue";
 
@@ -8,16 +9,34 @@ let props = defineProps({
   conversations: Object,
   user: Object,
   messages: Object,
+  // authImage: Object,
+  // receiverImage: Object,
 });
 
 let form = useForm({
   conversationId: props.conversations.id,
   content: "",
+  image: "",
 });
 
 let submit = () => {
   form.post("/chat/create");
   form.reset("content");
+};
+
+let insert = () => {
+  form.post("/chat/create/image");
+  form.reset("image");
+}
+
+const imageUrl = ref(null);
+
+const handleImageUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    imageUrl.value = URL.createObjectURL(file);
+    form.image = file;
+  }
 };
 
 function messageDelete(message){
@@ -60,8 +79,10 @@ export default {
                   <div class="flex flex-col h-full overflow-y-auto">
                     <div class="flex items-start">
                       <div
-                        class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-300"
-                      ></div>
+                        class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
+                      >
+                      <img :src="user.profileImage" alt="no-image">
+                    </div>
 
                       <div class="ml-3 mt-2">
                         <h2 class="text-lg font-semibold mb-4">
@@ -76,22 +97,28 @@ export default {
                     >
                       <div
                         v-if="
-                          message.sender.name === $page.props.auth.user.name
+                          message.name === $page.props.auth.user.name
                         "
                         class="flex items-start"
                       >
                         <div
-                          class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-300"
-                        ></div>
+                          class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
+                        >
+                        <img :src="message.userImage" alt="no-image">
+                      </div>
                         <div class="ml-3">
                           <p class="text-sm font-medium">
-                            {{ message.sender.name }}
+                            {{ message.name }}
                           </p>
                           <div class="bg-gray-100 rounded-lg p-2 mt-1">
-                            <button @click="messageDelete(message.id)">{{ message.content }}</button>
-                            <span class="ml-5">{{
-                              formatDate(message.created_at)
-                            }}</span>
+                            <span>
+                              <button @click="messageDelete(message.id)">
+                              <span>{{ message.content }}</span>
+                              <img :src="message.uploadImage" />
+                              </button>
+                            </span>
+                            <span class="ml-5">{{formatDate(message.created_at)}}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -102,32 +129,51 @@ export default {
                       >
                         <div class="mr-3">
                           <p class="text-sm font-medium">
-                            {{ message.sender.name }}
+                            {{ message.name }}
                           </p>
                           <div class="bg-gray-100 rounded-lg p-2 mt-1">
-                            {{ message.content }}
-                            <span class="mr-5">{{
+
+                            <button @click="messageDelete(message.id)">
+                              {{ message.content }}
+                              <img :src="message.uploadImage" alt="no-image"/>
+                            </button>
+                            <span class="ml-5">{{
                               formatDate(message.created_at)
                             }}</span>
                           </div>
                         </div>
                         <div
-                          class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-300"
-                        ></div>
+                        class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
+                        >
+                        <img :src="message.userImage" alt="no-image">
+                      </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div class="flex-none">
+                <div class="flex-none grid grid-cols-4">
                   <input
                     type="text"
                     placeholder="Type your message here"
-                    class="w-full p-4 focus:outline-none"
+                    class="p-4 mt-2 w-full focus:outline-none"
                     v-model="form.content"
                     @keydown.enter.prevent="submit"
                   />
+                  <TextInput
+                    id="image"
+                    type="file"
+                    class="p-4 mt-2"
+                    name="image"
+                    @change="handleImageUpload"
+                    required
+                    autofocus
+                    autocomplete="image"
+                />
+                <button @click="insert" class="p-4 border text-xl text-gray-900 hover:text-indigo-900 border-gray-900 hover:border-indigo-700 mt-2">upload</button>
+                <img class="mt-5 ml-40" v-if="imageUrl"  width="50" :src="imageUrl" alt="Selected Image" />
                 </div>
                 <InputError :message="form.errors.content" class="mt-2" />
+                <InputError class="mt-2" :message="form.errors.image" />
               </div>
             </div>
           </div>
