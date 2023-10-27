@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router, useForm } from "@inertiajs/vue3";
-import TextInput from '@/Components/TextInput.vue';
+import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import { ref } from "vue";
 
@@ -27,7 +27,7 @@ let submit = () => {
 let insert = () => {
   form.post("/chat/create/image");
   form.reset("image");
-}
+};
 
 const imageUrl = ref(null);
 
@@ -39,10 +39,9 @@ const handleImageUpload = (event) => {
   }
 };
 
-function messageDelete(message){
-  router.delete('/message/delete/'+message);
+function messageDelete(message) {
+  router.delete("/message/delete/" + message);
 }
-
 </script>
 <script>
 export default {
@@ -70,7 +69,7 @@ export default {
     <div class="py-12">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="flex ">
+          <div class="flex">
             <div class="w-1/4 bg-gray-200 p-4"></div>
 
             <div class="w-3/4 p-4">
@@ -81,8 +80,8 @@ export default {
                       <div
                         class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
                       >
-                      <img :src="user.profileImage" alt="no-image">
-                    </div>
+                        <img :src="user.profileImage" alt="no-image" />
+                      </div>
 
                       <div class="ml-3 mt-2">
                         <h2 class="text-lg font-semibold mb-4">
@@ -96,16 +95,14 @@ export default {
                       class="my-4 mx-6"
                     >
                       <div
-                        v-if="
-                          message.name === $page.props.auth.user.name
-                        "
+                        v-if="message.name === $page.props.auth.user.name"
                         class="flex items-start"
                       >
                         <div
                           class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
                         >
-                        <img :src="message.userImage" alt="no-image">
-                      </div>
+                          <img :src="message.userImage" alt="no-image" />
+                        </div>
                         <div class="ml-3">
                           <p class="text-sm font-medium">
                             {{ message.name }}
@@ -113,40 +110,50 @@ export default {
                           <div class="bg-gray-100 rounded-lg p-2 mt-1">
                             <span>
                               <button @click="messageDelete(message.id)">
-                              <span>{{ message.content }}</span>
-                              <img :src="message.uploadImage" />
+                                <span v-if="message.content">{{
+                                  message.content
+                                }}</span>
+                                <img
+                                  v-if="message.uploadImage"
+                                  :src="message.uploadImage"
+                                />
                               </button>
                             </span>
-                            <span class="ml-5">{{formatDate(message.created_at)}}
+
+                            <span class="ml-5"
+                              >{{ formatDate(message.created_at) }}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div
-                        v-else
-                        class="flex items-end justify-end"
-                      >
+                      <div v-else class="flex items-end justify-end">
                         <div class="mr-3">
                           <p class="text-sm font-medium">
                             {{ message.name }}
                           </p>
                           <div class="bg-gray-100 rounded-lg p-2 mt-1">
-
-                            <button @click="messageDelete(message.id)">
-                              {{ message.content }}
-                              <img :src="message.uploadImage" alt="no-image"/>
-                            </button>
+                            <span>
+                              <button @click="messageDelete(message.id)">
+                                <span v-if="message.content">{{
+                                  message.content
+                                }}</span>
+                                <img
+                                  v-if="message.uploadImage"
+                                  :src="message.uploadImage"
+                                />
+                              </button>
+                            </span>
                             <span class="ml-5">{{
                               formatDate(message.created_at)
                             }}</span>
                           </div>
                         </div>
                         <div
-                        class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
+                          class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
                         >
-                        <img :src="message.userImage" alt="no-image">
-                      </div>
+                          <img :src="message.userImage" alt="no-image" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -168,9 +175,20 @@ export default {
                     required
                     autofocus
                     autocomplete="image"
-                />
-                <button @click="insert" class="p-4 border text-xl text-gray-900 hover:text-indigo-900 border-gray-900 hover:border-indigo-700 mt-2">upload</button>
-                <img class="mt-5 ml-40" v-if="imageUrl"  width="50" :src="imageUrl" alt="Selected Image" />
+                  />
+                  <button
+                    @click="insert"
+                    class="p-4 border text-xl text-gray-900 hover:text-indigo-900 border-gray-900 hover:border-indigo-700 mt-2"
+                  >
+                    upload
+                  </button>
+                  <img
+                    class="mt-5 ml-40"
+                    v-if="imageUrl"
+                    width="50"
+                    :src="imageUrl"
+                    alt="Selected Image"
+                  />
                 </div>
                 <InputError :message="form.errors.content" class="mt-2" />
                 <InputError class="mt-2" :message="form.errors.image" />
