@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('conversation_id');
             $table->unsignedBigInteger('sender_id');
-            $table->text('content');
+            $table->text('content')->nullable();
             $table->timestamps();
         
             $table->foreign('conversation_id')->references('id')->on('conversations');
