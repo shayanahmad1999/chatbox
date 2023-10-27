@@ -9,8 +9,6 @@ let props = defineProps({
   conversations: Object,
   user: Object,
   messages: Object,
-  // authImage: Object,
-  // receiverImage: Object,
 });
 
 let form = useForm({
@@ -55,6 +53,15 @@ export default {
         minute: "2-digit",
       };
       return new Date(date).toLocaleString("en-US", options);
+    },
+    shouldShowImage(message) {
+      console.log('Upload Image:', message.uploadImage);
+      if (message.uploadImage) {
+        const extension = message.uploadImage.split('.').pop();
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']; // Add more if needed
+        return imageExtensions.includes(extension.toLowerCase());
+      }
+      return false;
     },
   },
 };
@@ -113,9 +120,9 @@ export default {
                                 <span v-if="message.content">{{
                                   message.content
                                 }}</span>
-                                <img
-                                  v-if="message.uploadImage"
-                                  :src="message.uploadImage"
+                                  <img
+                                  v-if="shouldShowImage(message)"
+                                  :src="`${message.uploadImage}`"
                                 />
                               </button>
                             </span>
@@ -138,8 +145,8 @@ export default {
                                 <span v-if="message.content">{{
                                   message.content
                                 }}</span>
-                                <img
-                                  v-if="message.uploadImage"
+                                  <img
+                                  v-if="shouldShowImage(message)"
                                   :src="message.uploadImage"
                                 />
                               </button>
