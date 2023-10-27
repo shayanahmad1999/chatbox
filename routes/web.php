@@ -31,6 +31,39 @@ Route::get('/', function () {
     ]);
 });
 
+// return Inertia::render('Dashboard', [
+//     'users' => User::query()
+//         ->when($request->input('search'), function ($query, $search) {
+//             $query->where('name', 'LIKE', "%{$search}%");
+//         })
+//         ->paginate(10)
+//         ->withQueryString()
+//         ->through(fn ($user) => [
+//             'id' => $user->id,
+//             'name' => $user->name,
+//             'email' => $user->email,
+//         ]),
+//     'filters' => $request->only(['search']),
+//     'conversations' => Conversation::where('user1_id', Auth::id())
+//         ->with('messages') // Load the messages relationship
+//         ->get()
+//         ->map(function ($conversation) {
+//             return [
+//                 'id' => $conversation->id,
+//                 'user1_id' => $conversation->user1_id,
+//                 'user2_id' => $conversation->user2_id,
+//                 'messages' => $conversation->messages->map(function ($message) {
+//                     return [
+//                         'id' => $message->id,
+//                         'content' => $message->content,
+//                         'created_at' => $message->created_at,
+//                         'uploadImage' => $message->uploadImage, // Assuming you have this field
+//                     ];
+//                 }),
+//             ];
+//         }),
+// ]);
+
 Route::get('/dashboard', function (Request $request) {
     return Inertia::render('Dashboard', [
         'users' => User::query()
@@ -53,10 +86,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/conversation/{conversationId}', [ConversationController::class, 'create']);
     Route::get('/chat/{conversationId}', [MessageController::class, 'chat']);
     Route::post('/chat/create', [MessageController::class, 'create']);
+    Route::post('/chat/create/image', [MessageController::class, 'insertImage']);
     Route::delete('/message/delete/{message}', [MessageController::class, 'destroy']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile', [ProfileController::class, 'image'])->name('profile.image');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
