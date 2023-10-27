@@ -81,11 +81,11 @@ export default {
 
             <div class="w-3/4 p-4">
               <div class="flex flex-col h-full bg-white rounded-lg">
-                <div class="flex-grow border-b">
+                <div class="flex-grow border-b mb-5">
                   <div class="flex flex-col h-full overflow-y-auto">
                     <div class="flex items-start">
                       <div
-                        class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
+                        class="flex-shrink-0 w-20 h-10 mb-10 rounded-full bg-gray-300"
                       >
                         <img :src="user.profileImage" alt="no-image" />
                       </div>
