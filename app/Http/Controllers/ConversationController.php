@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use App\Models\MakeFriend;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class ConversationController extends Controller
@@ -67,5 +70,26 @@ class ConversationController extends Controller
 
             return redirect('/chat/' . $conversationId)->with('messages', $messages);
         }
+    }
+
+    public function makeFriend(User $user){
+
+        MakeFriend::create([
+            'make_friend_by' => Auth::id(),
+            'user_id' => $user->id,
+        ]);
+        return Redirect::back();
+
+    //     if($user->status == 0)
+    //     {
+    //         $status = 1;
+    //         $user->statusChangeBy = Auth::id();
+    //     }
+    //     else
+    //     {
+    //         $status = 1;
+    //     }
+    //     $user->update(['friendStatus' => $status]);
+    //     return Redirect::back();
     }
 }
