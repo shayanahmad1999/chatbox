@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use App\Models\MakeFriend;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class MessageController extends Controller
     //         $query->where('user1_id', $conversationId)
     //             ->where('user2_id', Auth::id());
     //     })->first();
-    
+
     //     $conversations = Conversation::where(function ($query) use ($conversationId) {
     //         $query->where('user1_id', Auth::id())
     //             ->where('user2_id', $conversationId);
@@ -33,7 +34,7 @@ class MessageController extends Controller
     //     $messages = Message::where('conversation_id', $existingConversation->id)
     //     ->with('conversation', 'sender')
     //     ->get();
-        
+
     //     // $authImage = User::find(Auth::id())->first();
     //     // $receiverImage = User::find($conversationId)->first();
     //     // dd($user->conversationId);
@@ -48,7 +49,8 @@ class MessageController extends Controller
     //         // 'receiverImage' => asset($receiverImage->profileImage),
     //     ]);
     // }
-    public function chat($conversationId) {
+    public function chat(Request $request, $conversationId)
+    {
         $existingConversation = Conversation::where(function ($query) use ($conversationId) {
             $query->where('user1_id', Auth::id())
                 ->where('user2_id', $conversationId);
@@ -56,13 +58,29 @@ class MessageController extends Controller
             $query->where('user1_id', $conversationId)
                 ->where('user2_id', Auth::id());
         })->first();
-    
+        $make_friend = MakeFriend::with('users')->get();
+        $friends = MakeFriend::
+        where('make_friend_by', Auth::id())
+        ->when($request->input('search'), function ($query, $search) {
+            $query->whereHas('users', function ($query) use ($search) {
+                $query->where('name', 'LIKE', "%{$search}%");
+            });
+            })
+            ->get();
+        $friendsProp = [];
+        foreach ($friends as $friend) {
+            $friendsProp[] = [
+                'id' => $friend->users->id,
+                'name' => $friend->users->name,
+            ];
+        }
+
         $user = User::find($conversationId);
-    
+
         $messages = Message::where('conversation_id', $existingConversation->id)
             ->with('conversation', 'sender')
             ->get();
-    
+
         $userProp = [
             'id' => $user->id,
             'name' => $user->name,
@@ -72,25 +90,27 @@ class MessageController extends Controller
 
         $messageProps = [];
 
-foreach ($messages as $message) {
-    $messageProps[] = [
-        'id' => $message->id,
-        'content' => $message->content,
-        'created_at' => $message->created_at,
-        'name' => $message->sender->name,
-        'uploadImage' =>asset( $message->uploadImage),
-        'userImage' => asset($message->sender->profileImage),
-    ];
-}
-    // dd($messageProps);
+        foreach ($messages as $message) {
+            $messageProps[] = [
+                'id' => $message->id,
+                'content' => $message->content,
+                'created_at' => $message->created_at,
+                'name' => $message->sender->name,
+                'uploadImage' => asset($message->uploadImage),
+                'userImage' => asset($message->sender->profileImage),
+            ];
+        }
+        // dd($messageProps);
         return Inertia::render('Chat', [
             'conversations' => $existingConversation,
             'user' => $userProp,
             'messages' => $messageProps,
+            'friends' => $friendsProp,
+            'filters' => $request->only(['search']),
         ]);
     }
-    
-    
+
+
     public function create(Request $request)
     {
         $request->validate([
@@ -119,7 +139,7 @@ foreach ($messages as $message) {
             $imageName = time() . '.' . $image->getClientOriginalExtension();
             // $image->move(public_path('images/users'), $imageName);
             $imageSave = $image->move('uploads/message', $imageName);
-    
+
             Message::create([
                 'conversation_id' => $id,
                 'sender_id' => Auth::id(),
@@ -130,11 +150,11 @@ foreach ($messages as $message) {
         return redirect()->back();
     }
 
-    public function destroy(Message $message){
-        if(!is_null($message)){
+    public function destroy(Message $message)
+    {
+        if (!is_null($message)) {
             $message->delete();
             return redirect()->back();
         }
     }
-    
 }
