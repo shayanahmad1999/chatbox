@@ -3,12 +3,14 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router, useForm } from "@inertiajs/vue3";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
-import { ref } from "vue";
+import { ref,watch } from "vue";
 
 let props = defineProps({
   conversations: Object,
   user: Object,
   messages: Object,
+  filters: Object,
+  friends: Object,
 });
 
 let form = useForm({
@@ -40,6 +42,34 @@ const handleImageUpload = (event) => {
 function messageDelete(message) {
   router.delete("/message/delete/" + message);
 }
+
+function conversation(id) {
+  router.post(`/conversation/${id}`);
+}
+
+const debounce = (callback, delay) => {
+  let timerId;
+  return (...args) => {
+    clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      callback.apply(this, args);
+    }, delay);
+  };
+};
+
+const watchSearch = debounce((value) => {
+  const currentURL = window.location.href;
+  const separator = currentURL.includes("?") ? "&" : "?";
+  const updatedURL = `${currentURL}${separator}search=${value}`;
+  window.location.href = updatedURL;
+  // const currentURL = new URL(window.location.href);
+  // currentURL.searchParams.set('search', value);
+  // window.history.pushState({ path: currentURL.href }, '', currentURL.href);
+}, 300);
+
+const search = ref('');
+watch(search, watchSearch);
+
 </script>
 <script>
 export default {
@@ -55,10 +85,10 @@ export default {
       return new Date(date).toLocaleString("en-US", options);
     },
     shouldShowImage(message) {
-      console.log('Upload Image:', message.uploadImage);
+      console.log("Upload Image:", message.uploadImage);
       if (message.uploadImage) {
-        const extension = message.uploadImage.split('.').pop();
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']; // Add more if needed
+        const extension = message.uploadImage.split(".").pop();
+        const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"]; // Add more if needed
         return imageExtensions.includes(extension.toLowerCase());
       }
       return false;
@@ -77,20 +107,40 @@ export default {
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div class="flex">
-            <div class="w-1/4 bg-gray-200 p-4"></div>
+            <div class="w-1/4 bg-gray-200 p-4">
+              <h2 class="text-lg font-semibold mb-4">Users</h2>
+              <input
+                v-model="search"
+                type="text"
+                placeholder="Search friends"
+                class="w-full p-2 mb-4 rounded-lg focus:outline-none"
+              />
+              <ul>
+                <li
+                  v-for="friend in friends"
+                  :key="friend.id"
+                  class="mb-2 px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                >
+                  <button @click="conversation(friend.id)">
+                    {{ friend.name }}
+                  </button>
+                </li>
+              </ul>
+            </div>
 
             <div class="w-3/4 p-4">
               <div class="flex flex-col h-full bg-white rounded-lg">
                 <div class="flex-grow border-b mb-5">
                   <div class="flex flex-col h-full overflow-y-auto">
                     <div class="flex items-start">
-                      <div
-                        class="flex-shrink-0 w-20 h-10 mb-10 rounded-full bg-gray-300"
-                      >
-                        <img :src="user.profileImage" alt="no-image" />
+                      <div class="w-24 h-24 rounded-full overflow-hidden">
+                        <img
+                          class="object-cover w-full h-full"
+                          :src="user.profileImage"
+                          alt="Placeholder Image"
+                        />
                       </div>
-
-                      <div class="ml-3 mt-2">
+                      <div class="ml-3 mt-10">
                         <h2 class="text-lg font-semibold mb-4">
                           {{ user.name }}
                         </h2>
@@ -105,10 +155,12 @@ export default {
                         v-if="message.name === $page.props.auth.user.name"
                         class="flex items-start"
                       >
-                        <div
-                          class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
-                        >
-                          <img :src="message.userImage" alt="no-image" />
+                        <div class="w-24 h-24 rounded-full overflow-hidden">
+                          <img
+                            class="object-cover w-full h-full"
+                            :src="message.userImage"
+                            alt="Placeholder Image"
+                          />
                         </div>
                         <div class="ml-3">
                           <p class="text-sm font-medium">
@@ -120,7 +172,7 @@ export default {
                                 <span v-if="message.content">{{
                                   message.content
                                 }}</span>
-                                  <img
+                                <img
                                   v-if="shouldShowImage(message)"
                                   :src="`${message.uploadImage}`"
                                 />
@@ -145,7 +197,7 @@ export default {
                                 <span v-if="message.content">{{
                                   message.content
                                 }}</span>
-                                  <img
+                                <img
                                   v-if="shouldShowImage(message)"
                                   :src="message.uploadImage"
                                 />
@@ -156,10 +208,12 @@ export default {
                             }}</span>
                           </div>
                         </div>
-                        <div
-                          class="flex-shrink-0 w-20 h-10 rounded-full bg-gray-300"
-                        >
-                          <img :src="message.userImage" alt="no-image" />
+                        <div class="w-24 h-24 rounded-full overflow-hidden">
+                          <img
+                            class="object-cover w-full h-full"
+                            :src="message.userImage"
+                            alt="Placeholder Image"
+                          />
                         </div>
                       </div>
                     </div>

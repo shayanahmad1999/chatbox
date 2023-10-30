@@ -7,11 +7,9 @@ function conversation(id) {
   router.post(`/conversation/${id}`);
 }
 
-
-const messages = ref([
-  { sender: "User1", text: "Hello there!" },
-  { sender: "User2", text: "Hi! How are you?" },
-]);
+function makeFriend(id) {
+  router.post(`/make-friend/${id}`);
+}
 </script>
 
 <script>
@@ -21,10 +19,13 @@ export default {
     conversations: Object,
     users: Object,
     filters: Object,
+    friends: Object,
+    filtersFriend: Object,
   },
   data() {
     return {
       search: this.filters.search,
+      searchFriend: this.filters.searchFriend,
     };
   },
 
@@ -33,6 +34,16 @@ export default {
       this.$inertia.get(
         "/dashboard",
         { search: value },
+        {
+          preserveState: true,
+          replace: true,
+        }
+      );
+    }, 300),
+    searchFriend: debounce(function (value) {
+      this.$inertia.get(
+        "/dashboard",
+        { searchFriend: value },
         {
           preserveState: true,
           replace: true,
@@ -48,7 +59,9 @@ export default {
 
   <AuthenticatedLayout>
     <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight"> {{ $page.props.auth.user.name }}</h2>
+      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        {{ $page.props.auth.user.name }}
+      </h2>
     </template>
 
     <div class="py-12">
@@ -60,7 +73,7 @@ export default {
               <input
                 v-model="search"
                 type="text"
-                placeholder="Search users"
+                placeholder="Search friends"
                 class="w-full p-2 mb-4 rounded-lg focus:outline-none"
               />
               <ul>
@@ -76,7 +89,44 @@ export default {
               </ul>
             </div>
             <div class="w-3/4 p-4">
-              
+              <input
+                v-model="searchFriend"
+                type="text"
+                placeholder="Search friends"
+                class="w-full p-2 mb-4 mt-4 rounded-lg focus:outline-none"
+              />
+              <div class="grid grid-cols-6">
+                <div v-for="friend in friends" :key="friend.id">
+                  <div class="flex flex-col items-center">
+                    <div class="w-24 h-24 rounded-full overflow-hidden">
+                      <img
+                        class="object-cover w-full h-full"
+                        :src="friend.profileImage"
+                        alt="Placeholder Image"
+                      />
+                    </div>
+                    <p class="mt-2 text-lg font-medium">{{ friend.name }}</p>
+                    <div class="flex items-center mt-2">
+                      <button @click="makeFriend(friend.id)">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-6 w-6 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
