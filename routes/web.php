@@ -4,6 +4,7 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Conversation;
+use App\Models\MakeFriend;
 use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
@@ -65,24 +66,49 @@ Route::get('/', function () {
 // ]);
 
 Route::get('/dashboard', function (Request $request) {
+    $friends = User::where('id', '!=', Auth::id())
+    ->whereDoesntHave('makefriends', function($query) {
+        $query->where('make_friend_by', Auth::id());
+    })
+    ->when($request->input('searchFriend'), function ($query, $search) {
+        $query->where('name', 'LIKE', "%{$search}%");
+    })
+    ->get();
+    $friendsProp = [];
+    foreach ($friends as $friend) {
+        $friendsProp[] = [
+            'id' => $friend->id,
+            'name' => $friend->name,
+            'profileImage' => asset($friend->profileImage),
+        ];
+    }
+    $make_friend = MakeFriend::with('users')->get();
     return Inertia::render('Dashboard', [
-        'users' => User::query()
+        'users' => MakeFriend::query()
+        ->where('make_friend_by', Auth::id())
         ->when($request->input('search'), function ($query, $search) {
-            $query->where('name', 'LIKE', "%{$search}%");
+            $query->whereHas('users', function ($query) use ($search) {
+                $query->where('name', 'LIKE', "%{$search}%");
+            });
         })
         ->paginate(10)
         ->withQueryString()
-        ->through(fn ($user) => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
+        ->through(fn ($make_friend) => [
+            'id' => $make_friend->users->id,
+            'name' => $make_friend->users->name,
         ]),
+        
         'filters' => $request->only(['search']),
         'conversations' => Conversation::where('user1_id', Auth::id())->get(),
+        'friends' => $friendsProp,
+        'filtersFriend' => $request->only(['search']),
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+
+    Route::post('/make-friend/{user}', [ConversationController::class, 'makeFriend']);
+
     Route::post('/conversation/{conversationId}', [ConversationController::class, 'create']);
     Route::get('/chat/{conversationId}', [MessageController::class, 'chat']);
     Route::post('/chat/create', [MessageController::class, 'create']);
